@@ -1,0 +1,1 @@
+import{defineConfig,devices}from'@playwright/test';export default defineConfig({testDir:'e2e',use:{baseURL:'http://127.0.0.1:4180'},projects:[{name:'mobile-chrome',use:{...devices['Pixel 7']}}],webServer:{command:'npm run serve',url:'http://127.0.0.1:4180',reuseExistingServer:!process.env.CI}});
