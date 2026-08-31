@@ -1,0 +1,1 @@
+{"data":[{"id":"f1","name":"Traverse Pack","description":"A balanced pack for long trail days.","price":{"amount":"119.00","currency":"USD"},"available":true},{"id":"f2","name":"Winter Quilt","description":"Lightweight warmth below freezing.","price":{"amount":"279.00","currency":"USD"},"available":false}],"nextCursor":null,"requestId":"synthetic_flutter"}
