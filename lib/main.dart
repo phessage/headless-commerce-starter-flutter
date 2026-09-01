@@ -44,6 +44,7 @@ class _StorePageState extends State<StorePage> {
   String error = '', status = '';
   bool busy = false;
   Future<void> add(Product product) async {
+    await commerce.configure();
     if (!commerce.live) {
       setState(() {
         cart++;

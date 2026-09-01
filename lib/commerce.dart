@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'store_runtime.dart';
 
 class CartState {
   const CartState({required this.items});
@@ -43,17 +44,21 @@ class CommerceClient {
   CommerceClient({http.Client? client}) : client = client ?? http.Client();
   final http.Client client;
   String token = '';
-  static const apiUrl = String.fromEnvironment('HEADLESS_API_URL');
-  static const key = String.fromEnvironment('HEADLESS_PUBLISHABLE_KEY');
-  bool get live => apiUrl.isNotEmpty && key.isNotEmpty;
-  String get base => apiUrl.replaceFirst(RegExp(r'/$'), '');
+  StoreRuntime? runtime;
+  bool get live => runtime?.live ?? true;
+  Future<void> configure() async {
+    runtime ??= await StoreRuntime.load(client: client);
+  }
+
+  String get base => runtime!.apiUrl.replaceFirst(RegExp(r'/$'), '');
   Map<String, String> headers({bool json = false}) => {
     'accept': 'application/json',
-    'x-publishable-key': key,
+    'x-publishable-key': runtime!.publishableKey,
     if (token.isNotEmpty) 'x-cart-token': token,
     if (json) 'content-type': 'application/json',
   };
   Future<void> createCart() async {
+    await configure();
     if (token.isNotEmpty) return;
     final response = await client.post(
       Uri.parse('$base/v1/headless/carts'),
@@ -80,6 +85,7 @@ class CommerceClient {
   }
 
   Future<CheckoutState> prepare(Map<String, String> address) async {
+    await configure();
     final response = await client.patch(
       Uri.parse('$base/v1/headless/carts/current/checkout'),
       headers: headers(json: true),
@@ -98,6 +104,7 @@ class CommerceClient {
   }
 
   Future<CheckoutState> select(String kind, String id) async {
+    await configure();
     final response = await client.put(
       Uri.parse('$base/v1/headless/carts/current/checkout/$kind'),
       headers: headers(json: true),
