@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-test("prepares a real fixture cart in compiled Flutter web", async ({
+test("places and renders a real non-hosted order in compiled Flutter web", async ({
   page,
 }) => {
   await page.goto("/");
@@ -21,8 +21,14 @@ test("prepares a real fixture cart in compiled Flutter web", async ({
     ["City", "Vancouver"],
     ["State / province", "BC"],
     ["Postal code", "V6B1A1"],
-  ] as const)
-    await page.getByLabel(label).fill(value);
+  ] as const) {
+    const field = page.getByLabel(label);
+    await field.scrollIntoViewIfNeeded();
+    await field.click();
+    await field.press("ControlOrMeta+A");
+    await field.pressSequentially(value, { delay: 20 });
+    await expect(field).toHaveValue(value);
+  }
   const prepared = page.waitForResponse(
     (r) =>
       r.url().endsWith("/v1/headless/carts/current/checkout") &&
@@ -44,8 +50,12 @@ test("prepares a real fixture cart in compiled Flutter web", async ({
   await page.getByRole("menuitem").first().click();
   await paymentSelected;
   await expect(page.getByRole("group", { name: /No preparation gaps/ })).toBeVisible();
-  const placed = page.waitForResponse((r) => r.url().endsWith("/checkout/order") && r.request().method() === "POST" && r.status() === 201);
+  const placed = page.waitForResponse((r) => r.url().endsWith("/checkout/order") && r.request().method() === "POST");
   await page.getByText("Place pending order").click();
-  const body = await (await placed).json(); expect(body.data.requiresPayment).toBe(false); expect(body.data.paymentStatus).toBe("pending");
+  const response = await placed;
+  const body = await response.json();
+  expect(response.status(), JSON.stringify(body)).toBe(201);
+  expect(body.data.requiresPayment).toBe(false); expect(body.data.paymentStatus).toBe("pending");
+  console.log(`Flutter live order: ${body.data.orderNumber}`);
   await expect(page.getByRole("group", { name: new RegExp(`Order confirmation Order ${body.data.orderNumber} placed`) })).toBeVisible();
 });
