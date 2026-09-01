@@ -1,7 +1,20 @@
 # 1Ecomm Flutter Storefront Starter
 
-Flutter iOS/Android/web reference storefront for the 1Ecomm public catalog, anonymous-cart, checkout-preparation and non-hosted pending-order preview. Change only `storeId` in `assets/headless-config.json`; the same source resolves the public runtime document on web, iOS and Android.
+This is one Flutter shop codebase for web, iOS and Android. It shows products, cart, guest checkout choices and a pending non-hosted order confirmation. It never charges a card or wallet.
 
-Run `flutter analyze`, `flutter test`, `flutter build web`, then `npm install && npm run test:e2e:live` for the compiled-web store journey.
+## Run the web version
 
-The publishable key may be bundled, but the cart capability currently lives only in memory. Platform secure storage, PKCE, deep links, offline/uncertain mutation recovery, checkout return handling, native integration testing and signing remain release gates. Never clone production customer data into a demo environment.
+1. Install the current stable Flutter SDK and Node.js 20 or newer.
+2. Open `assets/headless-config.json` and replace only `storeId` with your provisioned 1Ecomm store ID. The included ID is a safe test fixture.
+3. Run:
+
+```bash
+flutter pub get
+flutter analyze
+flutter test
+flutter run -d chrome
+```
+
+For the exact production-web artifact and browser smoke, run `flutter build web`, `npm ci`, and `npm run test:e2e`. `npm run test:e2e:live` creates an isolated fixture cart and pending bank-transfer test order against the deployed API. It does not move money.
+
+Changing the bundled store ID requires rebuilding, but no Dart source edit. The web build is qualified; platform-secure token storage, PKCE/deep links, offline recovery, signed builds, device installation and app-store submission remain separate native release gates.
