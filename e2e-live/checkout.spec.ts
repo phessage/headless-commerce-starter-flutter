@@ -22,7 +22,7 @@ test("places and renders a real non-hosted order in compiled Flutter web", async
     ["State / province", "BC"],
     ["Postal code", "V6B1A1"],
   ] as const) {
-    const field = page.getByLabel(label);
+    const field = page.getByLabel(label, { exact: true });
     await field.scrollIntoViewIfNeeded();
     await field.click();
     await field.press("ControlOrMeta+A");
@@ -58,4 +58,13 @@ test("places and renders a real non-hosted order in compiled Flutter web", async
   expect(body.data.requiresPayment).toBe(false); expect(body.data.paymentStatus).toBe("pending");
   console.log(`Flutter live order: ${body.data.orderNumber}`);
   await expect(page.getByRole("group", { name: new RegExp(`Order confirmation Order ${body.data.orderNumber} placed`) })).toBeVisible();
+  await page.reload();
+  await page.getByLabel("Order number", { exact: true }).fill(body.data.orderNumber);
+  await page.getByLabel("Order email", { exact: true }).fill("flutter-live@example.test");
+  const lookedUp = page.waitForResponse(
+    (r) => r.url().endsWith("/v1/headless/orders/lookup") && r.status() === 201,
+  );
+  await page.getByText("Check order status").click();
+  await lookedUp;
+  await expect(page.getByRole("group", { name: new RegExp(`Order lookup result Order ${body.data.orderNumber}`) })).toBeVisible();
 });

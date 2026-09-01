@@ -57,6 +57,9 @@ class _StorePageState extends State<StorePage> {
   int cart = 0;
   CheckoutState? checkout;
   OrderConfirmation? order;
+  OrderStatus? lookedUpOrder;
+  final lookupNumber = TextEditingController();
+  final lookupEmail = TextEditingController();
   String orderIntent = '';
   String error = '', status = '';
   bool busy = false;
@@ -153,6 +156,40 @@ class _StorePageState extends State<StorePage> {
     }
   }
 
+  Future<void> lookupOrder() async {
+    setState(() {
+      busy = true;
+      error = '';
+      lookedUpOrder = null;
+    });
+    try {
+      final value = await commerce.lookupOrder(
+        lookupNumber.text,
+        lookupEmail.text,
+      );
+      setState(() {
+        lookedUpOrder = value;
+        status = 'Order found';
+      });
+    } catch (_) {
+      setState(
+        () => error = 'Order not found. Check the order number and email.',
+      );
+    } finally {
+      setState(() => busy = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in fields.values) {
+      controller.dispose();
+    }
+    lookupNumber.dispose();
+    lookupEmail.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
@@ -172,8 +209,55 @@ class _StorePageState extends State<StorePage> {
         if (status.isNotEmpty)
           Padding(padding: const EdgeInsets.all(16), child: Text(status)),
         if (cart > 0) checkoutForm(),
+        orderLookup(),
         catalog(),
       ],
+    ),
+  );
+  Widget orderLookup() => Card(
+    margin: const EdgeInsets.all(16),
+    child: Padding(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Check an order',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const Text(
+            'Use the order number and checkout email. No account is required.',
+          ),
+          TextField(
+            controller: lookupNumber,
+            decoration: const InputDecoration(labelText: 'Order number'),
+          ),
+          TextField(
+            controller: lookupEmail,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(labelText: 'Order email'),
+          ),
+          FilledButton(
+            onPressed: busy ? null : lookupOrder,
+            child: const Text('Check order status'),
+          ),
+          if (lookedUpOrder != null)
+            Semantics(
+              label: 'Order lookup result',
+              child: Column(
+                children: [
+                  Text(
+                    'Order ${lookedUpOrder!.orderNumber}',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  Text('Status: ${lookedUpOrder!.status}'),
+                  Text('Payment: ${lookedUpOrder!.paymentStatus}'),
+                  Text('Items: ${lookedUpOrder!.itemCount}'),
+                ],
+              ),
+            ),
+        ],
+      ),
     ),
   );
   Widget hero() => Container(

@@ -1,6 +1,6 @@
 # 1Ecomm Flutter Storefront Starter
 
-This is one Flutter shop codebase for web, iOS and Android. It shows products, cart, guest checkout choices and a pending non-hosted order confirmation. It never charges a card or wallet.
+This is one Flutter shop codebase for web, iOS and Android. It shows products, cart, guest checkout choices, a pending non-hosted order confirmation, and account-free return-order lookup. It never charges a card or wallet.
 
 ## Run the web version
 
