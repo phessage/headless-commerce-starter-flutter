@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'store_runtime.dart';
 
 class Product {
   const Product({
@@ -26,18 +27,20 @@ class Product {
 class CatalogClient {
   CatalogClient({http.Client? client}) : client = client ?? http.Client();
   final http.Client client;
-  static const apiUrl = String.fromEnvironment('HEADLESS_API_URL');
-  static const key = String.fromEnvironment('HEADLESS_PUBLISHABLE_KEY');
   Future<List<Product>> list() async {
+    final runtime = await StoreRuntime.load(client: client);
     String body;
-    if (apiUrl.isEmpty || key.isEmpty) {
+    if (!runtime.live) {
       body = await rootBundle.loadString('assets/products.json');
     } else {
       final response = await client.get(
         Uri.parse(
-          '${apiUrl.replaceFirst(RegExp(r'/$'), '')}/v1/headless/products',
+          '${runtime.apiUrl.replaceFirst(RegExp(r'/$'), '')}/v1/headless/products',
         ),
-        headers: {'accept': 'application/json', 'x-publishable-key': key},
+        headers: {
+          'accept': 'application/json',
+          'x-publishable-key': runtime.publishableKey,
+        },
       );
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception('Catalog unavailable (${response.statusCode})');
