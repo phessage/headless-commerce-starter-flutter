@@ -17,7 +17,10 @@ void main() {
               'orderNumber': 'ORD123',
               'status': 'pending',
               'paymentStatus': 'pending',
-              'itemCount': 2,
+              'items': [
+                {'id': 'line-1'},
+                {'id': 'line-2'},
+              ],
             },
           }),
           201,
