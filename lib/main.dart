@@ -56,6 +56,8 @@ class _StorePageState extends State<StorePage> {
   };
   int cart = 0;
   CheckoutState? checkout;
+  OrderConfirmation? order;
+  String orderIntent = '';
   String error = '', status = '';
   bool busy = false;
   Future<void> add(Product product) async {
@@ -118,6 +120,39 @@ class _StorePageState extends State<StorePage> {
     }
   }
 
+  Future<void> placeOrder() async {
+    final state = checkout;
+    Choice? selected;
+    for (final choice in state?.payment ?? const <Choice>[]) {
+      if (choice.id == state?.paymentId) selected = choice;
+    }
+    if (state == null ||
+        state.missing.isNotEmpty ||
+        selected?.requiresHostedCheckout != false ||
+        selected?.canPlaceOrder != true) {
+      setState(() => error = 'Choose a supported non-hosted payment method');
+      return;
+    }
+    orderIntent = orderIntent.isEmpty
+        ? 'flutter-${DateTime.now().microsecondsSinceEpoch}'
+        : orderIntent;
+    setState(() {
+      busy = true;
+      error = '';
+    });
+    try {
+      final value = await commerce.placeOrder(orderIntent);
+      setState(() {
+        order = value;
+        status = 'Pending order placed';
+      });
+    } catch (e) {
+      setState(() => error = e.toString());
+    } finally {
+      setState(() => busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
@@ -161,7 +196,7 @@ class _StorePageState extends State<StorePage> {
           ),
         ),
         Text(
-          'Preparation only—no order placement or payment capture.',
+          'Capability-gated pending orders, without payment capture.',
           style: TextStyle(color: Colors.white),
         ),
       ],
@@ -256,6 +291,25 @@ class _StorePageState extends State<StorePage> {
                     .toList(),
                 onChanged: (id) => select('payment-method', id),
               ),
+              if (order == null)
+                FilledButton(
+                  onPressed: state.missing.isEmpty && !busy ? placeOrder : null,
+                  child: const Text('Place pending order'),
+                ),
+              if (order != null)
+                Semantics(
+                  label: 'Order confirmation',
+                  child: Column(
+                    children: [
+                      Text(
+                        'Order ${order!.orderNumber} placed',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      Text('Status: ${order!.status}'),
+                      Text('Payment: ${order!.paymentStatus}'),
+                    ],
+                  ),
+                ),
             ],
             ...fields.entries.map(
               (entry) => TextField(

@@ -3,9 +3,6 @@ test("prepares a real fixture cart in compiled Flutter web", async ({
   page,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("button", { name: "Enable accessibility" })
-    .dispatchEvent("click");
   const add = page.getByText("Add Best Sellers — sample listing to cart");
   await expect(add).toBeVisible({ timeout: 20000 });
   const added = page.waitForResponse(
@@ -47,4 +44,8 @@ test("prepares a real fixture cart in compiled Flutter web", async ({
   await page.getByRole("menuitem").first().click();
   await paymentSelected;
   await expect(page.getByRole("group", { name: /No preparation gaps/ })).toBeVisible();
+  const placed = page.waitForResponse((r) => r.url().endsWith("/checkout/order") && r.request().method() === "POST" && r.status() === 201);
+  await page.getByText("Place pending order").click();
+  const body = await (await placed).json(); expect(body.data.requiresPayment).toBe(false); expect(body.data.paymentStatus).toBe("pending");
+  await expect(page.getByRole("group", { name: new RegExp(`Order confirmation Order ${body.data.orderNumber} placed`) })).toBeVisible();
 });

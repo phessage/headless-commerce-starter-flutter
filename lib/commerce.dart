@@ -10,10 +10,35 @@ class CartState {
 }
 
 class Choice {
-  const Choice({required this.id, required this.name});
+  const Choice({
+    required this.id,
+    required this.name,
+    this.requiresHostedCheckout,
+    this.canPlaceOrder,
+  });
   final String id, name;
-  factory Choice.fromJson(Map<String, dynamic> value) =>
-      Choice(id: value['id'] as String, name: value['name'] as String);
+  final bool? requiresHostedCheckout, canPlaceOrder;
+  factory Choice.fromJson(Map<String, dynamic> value) {
+    final capabilities =
+        value['capabilities'] as Map<String, dynamic>? ?? const {};
+    return Choice(
+      id: value['id'] as String,
+      name: value['name'] as String,
+      requiresHostedCheckout: capabilities['requiresHostedCheckout'] as bool?,
+      canPlaceOrder: capabilities['canPlaceOrder'] as bool?,
+    );
+  }
+}
+
+class OrderConfirmation {
+  const OrderConfirmation(this.orderNumber, this.status, this.paymentStatus);
+  final String orderNumber, status, paymentStatus;
+  factory OrderConfirmation.fromJson(Map<String, dynamic> value) =>
+      OrderConfirmation(
+        value['orderNumber'] as String,
+        value['status'] as String,
+        value['paymentStatus'] as String,
+      );
 }
 
 class CheckoutState {
@@ -112,6 +137,23 @@ class CommerceClient {
     );
     _ok(response, 200);
     return _checkout(response);
+  }
+
+  Future<OrderConfirmation> placeOrder(String idempotencyKey) async {
+    final key = idempotencyKey.trim();
+    if (key.isEmpty || key.length > 120) {
+      throw ArgumentError('An idempotency key of 1-120 characters is required');
+    }
+    await configure();
+    final response = await client.post(
+      Uri.parse('$base/v1/headless/carts/current/checkout/order'),
+      headers: {...headers(), 'Idempotency-Key': key},
+    );
+    _ok(response, 201);
+    return OrderConfirmation.fromJson(
+      (jsonDecode(response.body) as Map<String, dynamic>)['data']
+          as Map<String, dynamic>,
+    );
   }
 
   CheckoutState _checkout(http.Response response) => CheckoutState.fromJson(
