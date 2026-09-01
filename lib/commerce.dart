@@ -41,6 +41,23 @@ class OrderConfirmation {
       );
 }
 
+class OrderStatus {
+  const OrderStatus(
+    this.orderNumber,
+    this.status,
+    this.paymentStatus,
+    this.itemCount,
+  );
+  final String orderNumber, status, paymentStatus;
+  final int itemCount;
+  factory OrderStatus.fromJson(Map<String, dynamic> value) => OrderStatus(
+    value['orderNumber'] as String,
+    value['status'] as String,
+    value['paymentStatus'] as String,
+    value['itemCount'] as int? ?? 0,
+  );
+}
+
 class CheckoutState {
   const CheckoutState({
     required this.shipping,
@@ -151,6 +168,25 @@ class CommerceClient {
     );
     _ok(response, 201);
     return OrderConfirmation.fromJson(
+      (jsonDecode(response.body) as Map<String, dynamic>)['data']
+          as Map<String, dynamic>,
+    );
+  }
+
+  Future<OrderStatus> lookupOrder(String orderNumber, String email) async {
+    final number = orderNumber.trim();
+    final address = email.trim();
+    if (number.isEmpty || address.isEmpty) {
+      throw ArgumentError('Order number and email are required');
+    }
+    await configure();
+    final response = await client.post(
+      Uri.parse('$base/v1/headless/orders/lookup'),
+      headers: headers(json: true),
+      body: jsonEncode({'orderNumber': number, 'email': address}),
+    );
+    _ok(response, 201);
+    return OrderStatus.fromJson(
       (jsonDecode(response.body) as Map<String, dynamic>)['data']
           as Map<String, dynamic>,
     );
