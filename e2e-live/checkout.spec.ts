@@ -8,10 +8,11 @@ test("places and renders a real non-hosted order in compiled Flutter web", async
   const added = page.waitForResponse(
     (r) =>
       r.url().endsWith("/v1/headless/carts/current/items") &&
-      r.status() === 201,
+      r.request().method() === "POST",
   );
   await add.click();
-  await added;
+  const addResponse = await added;
+  expect(addResponse.status(), await addResponse.text()).toBe(201);
   await expect(page.getByText("Cart 1")).toBeVisible();
   for (const [label, value] of [
     ["First name", "Headless"],
@@ -66,5 +67,11 @@ test("places and renders a real non-hosted order in compiled Flutter web", async
   );
   await page.getByText("Check order status").click();
   await lookedUp;
-  await expect(page.getByRole("group", { name: new RegExp(`Order lookup result Order ${body.data.orderNumber}`) })).toBeVisible();
+  await expect(
+    page.getByRole("group", {
+      name: new RegExp(
+        `Order lookup result Order ${body.data.orderNumber}.*Items: 1`,
+      ),
+    }),
+  ).toBeVisible();
 });
