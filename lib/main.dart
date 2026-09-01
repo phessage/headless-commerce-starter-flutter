@@ -1,8 +1,23 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'catalog.dart';
 import 'commerce.dart';
 
-void main() => runApp(const StoreApp());
+class _WebAccessibility {
+  static SemanticsHandle? handle;
+}
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Keep the web semantics tree active so keyboard and assistive-technology
+  // users do not depend on Flutter's off-viewport activation placeholder.
+  if (kIsWeb) {
+    _WebAccessibility.handle = SemanticsBinding.instance.ensureSemantics();
+    assert(_WebAccessibility.handle != null);
+  }
+  runApp(const StoreApp());
+}
 
 class StoreApp extends StatelessWidget {
   const StoreApp({super.key});

@@ -9,15 +9,6 @@ test('compiled Flutter web bootstraps one store ID and updates cart', async ({ p
   const catalogResponse = page.waitForResponse((response) => response.url() === 'https://sandbox.test/v1/headless/products' && response.status() === 200);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await Promise.all([bootstrapResponse, catalogResponse]);
-  const accessibility = page.getByRole('button', { name: 'Enable accessibility' });
-  await expect(accessibility).toBeVisible();
-  // Flutter intentionally positions this control outside the viewport and may
-  // attach its listener after the element exists. Retry the real activation
-  // event until the compiled semantics tree exposes the fetched product.
-  await expect.poll(async () => {
-    await accessibility.dispatchEvent('click');
-    return page.getByText('Traverse Pack').count();
-  }, { timeout: 20_000 }).toBeGreaterThan(0);
   await expect(page.getByText('Traverse Pack')).toBeVisible({ timeout: 20_000 });
   await page.getByText('Add Traverse Pack to cart').click();
   await expect(page.getByText('Cart 1')).toBeVisible();
