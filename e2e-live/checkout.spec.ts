@@ -66,5 +66,11 @@ test("places and renders a real non-hosted order in compiled Flutter web", async
   );
   await page.getByText("Check order status").click();
   await lookedUp;
-  await expect(page.getByRole("group", { name: new RegExp(`Order lookup result Order ${body.data.orderNumber}`) })).toBeVisible();
+  await expect(
+    page.getByRole("group", {
+      name: new RegExp(
+        `Order lookup result Order ${body.data.orderNumber}.*Items: 1`,
+      ),
+    }),
+  ).toBeVisible();
 });
