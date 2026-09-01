@@ -54,7 +54,7 @@ class OrderStatus {
     value['orderNumber'] as String,
     value['status'] as String,
     value['paymentStatus'] as String,
-    value['itemCount'] as int? ?? 0,
+    (value['items'] as List?)?.length ?? 0,
   );
 }
 
