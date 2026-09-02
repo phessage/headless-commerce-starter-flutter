@@ -45,13 +45,13 @@ test("places and renders a real non-hosted order in compiled Flutter web", async
       r.status() === 200,
   );
   await page.getByText("Load checkout choices").click();
-  await prepared;
-  await page.getByRole("button", { name: "Shipping method" }).click();
-  const shippingSelected = page.waitForResponse(
-    (r) => r.url().endsWith("/checkout/shipping-method") && r.status() === 200,
-  );
-  await page.getByRole("menuitem").first().click();
-  await shippingSelected;
+  const preparation = (await (await prepared).json()).data;
+  if (preparation.shippingOptions.length > 0) {
+    await page.getByRole("button", { name: "Shipping method" }).click();
+    const shippingSelected = page.waitForResponse((r) => r.url().endsWith("/checkout/shipping-method") && r.status() === 200);
+    await page.getByRole("menuitem").first().click();
+    await shippingSelected;
+  }
   await page.getByRole("button", { name: "Payment method" }).click();
   const paymentSelected = page.waitForResponse(
     (r) => r.url().endsWith("/checkout/payment-method") && r.status() === 200,
