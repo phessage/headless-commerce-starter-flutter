@@ -2,8 +2,16 @@ import { expect, test } from "@playwright/test";
 test("places and renders a real non-hosted order in compiled Flutter web", async ({
   page,
 }) => {
+  const productId = process.env.HEADLESS_PRODUCT_ID;
+  const publishableKey = process.env.HEADLESS_PUBLISHABLE_KEY;
+  if (!productId || !publishableKey) throw new Error("Allocated fixture environment is required");
+  await page.route("**/v1/headless/stores/**", (route) => route.fulfill({ json: { data: { storeId: process.env.HEADLESS_STORE_ID, apiUrl: process.env.HEADLESS_API_URL, publishableKey, apiVersion: "v1", capabilities: ["catalog", "cart", "checkout-preparation"] } } }));
+  const catalog = page.waitForResponse((r) => r.url().endsWith("/v1/headless/products") && r.status() === 200);
   await page.goto("/");
-  const add = page.getByText("Add Best Sellers — sample listing to cart");
+  const catalogBody = await (await catalog).json();
+  const product = catalogBody.data.find((item: { id: string }) => item.id === productId);
+  if (!product) throw new Error("Allocated product is absent from the leased catalog");
+  const add = page.getByText(`Add ${product.name} to cart`);
   await expect(add).toBeVisible({ timeout: 20000 });
   const added = page.waitForResponse(
     (r) =>
