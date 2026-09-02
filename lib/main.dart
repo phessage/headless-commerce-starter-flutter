@@ -65,13 +65,6 @@ class _StorePageState extends State<StorePage> {
   bool busy = false;
   Future<void> add(Product product) async {
     await commerce.configure();
-    if (!commerce.live) {
-      setState(() {
-        cart++;
-        status = 'Synthetic demo only; configure a live sandbox for checkout';
-      });
-      return;
-    }
     setState(() {
       busy = true;
       error = '';
