@@ -2,6 +2,8 @@
 
 This is one Flutter shop codebase for web, iOS and Android. It shows products, cart, guest checkout choices, a pending non-hosted order confirmation, and account-free return-order lookup. It never charges a card or wallet.
 
+It fails closed when bootstrap or catalog APIs are unavailable; it never substitutes bundled products. Widget tests use an explicit test-only loader seam rather than a runtime fixture path.
+
 ## Run the web version
 
 1. Install the current stable Flutter SDK and Node.js 20 or newer.
