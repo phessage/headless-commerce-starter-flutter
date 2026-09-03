@@ -1,5 +1,6 @@
 {
   "name": "@phessage/headless-commerce-starter-flutter-e2e",
+  "license": "SEE LICENSE IN LICENSE.md",
   "private": true,
   "scripts": {
     "serve": "npx http-server build/web -p 4180 -c-1",
