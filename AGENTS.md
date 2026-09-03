@@ -18,6 +18,10 @@ The server owns pricing, inventory, checkout options and orders. Cart tokens and
 - Store production bearer tokens in platform Keychain/Keystore through a reviewed abstraction. Never log them.
 - Direct dependencies must follow the stable Flutter/Dart constraint. Do not force transitive packages beyond the SDK-pinned graph.
 
+## License boundary
+
+`LICENSE.md` allows authorized 1Ecomm customer projects and deployed or compiled shopper applications, but prohibits redistribution of this reusable starter or its derivatives. Preserve the notice in clones, packages, generated projects and documentation. Do not describe this repository as open source or grant broader rights in examples.
+
 ## Verification
 
 Run `flutter pub get`, `dart format --output=none --set-exit-if-changed .`, `flutter analyze`, `flutter test`, `flutter build web`, `npm ci`, and `npm run test:e2e`. Live proof uses only the maintained sandbox. Native claims require Android and iOS build plus installed-device evidence; compiled web does not qualify native behavior.
