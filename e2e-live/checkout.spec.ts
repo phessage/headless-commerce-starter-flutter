@@ -2,8 +2,16 @@ import { expect, test } from "@playwright/test";
 test("places and renders a real non-hosted order in compiled Flutter web", async ({
   page,
 }) => {
+  const productId = process.env.HEADLESS_PRODUCT_ID;
+  const publishableKey = process.env.HEADLESS_PUBLISHABLE_KEY;
+  if (!productId || !publishableKey) throw new Error("Allocated fixture environment is required");
+  await page.route("**/v1/headless/stores/**", (route) => route.fulfill({ json: { data: { storeId: process.env.HEADLESS_STORE_ID, apiUrl: process.env.HEADLESS_API_URL, publishableKey, apiVersion: "v1", capabilities: ["catalog", "cart", "checkout-preparation"] } } }));
+  const catalog = page.waitForResponse((r) => r.url().endsWith("/v1/headless/products") && r.status() === 200);
   await page.goto("/");
-  const add = page.getByText("Add Best Sellers — sample listing to cart");
+  const catalogBody = await (await catalog).json();
+  const product = catalogBody.data.find((item: { id: string }) => item.id === productId);
+  if (!product) throw new Error("Allocated product is absent from the leased catalog");
+  const add = page.getByText(`Add ${product.name} to cart`);
   await expect(add).toBeVisible({ timeout: 20000 });
   const added = page.waitForResponse(
     (r) =>
@@ -37,13 +45,13 @@ test("places and renders a real non-hosted order in compiled Flutter web", async
       r.status() === 200,
   );
   await page.getByText("Load checkout choices").click();
-  await prepared;
-  await page.getByRole("button", { name: "Shipping method" }).click();
-  const shippingSelected = page.waitForResponse(
-    (r) => r.url().endsWith("/checkout/shipping-method") && r.status() === 200,
-  );
-  await page.getByRole("menuitem").first().click();
-  await shippingSelected;
+  const preparation = (await (await prepared).json()).data;
+  if (preparation.shippingOptions.length > 0) {
+    await page.getByRole("button", { name: "Shipping method" }).click();
+    const shippingSelected = page.waitForResponse((r) => r.url().endsWith("/checkout/shipping-method") && r.status() === 200);
+    await page.getByRole("menuitem").first().click();
+    await shippingSelected;
+  }
   await page.getByRole("button", { name: "Payment method" }).click();
   const paymentSelected = page.waitForResponse(
     (r) => r.url().endsWith("/checkout/payment-method") && r.status() === 200,
