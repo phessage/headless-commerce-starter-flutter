@@ -4,7 +4,7 @@ Read `README.md`, `analysis_options.yaml`, `lib/*`, `test/*`, platform configura
 
 ## Boundary and contract
 
-This is one Flutter codebase for web, Android and iOS. `assets/headless-config.json` contains one `storeId`; changing it requires rebuild but no Dart source edit. Canonical HTTP truth is `phessage/ecommerce-service/contracts/headless-commerce-v1.openapi.yaml`.
+This is one Flutter codebase for web, Android and iOS. `assets/headless-config.json` contains one `storeId`; changing it requires rebuild but no Dart source edit. Canonical HTTP truth is `https://www.1ecomm.com/headless-commerce/openapi.yaml`.
 
 The server owns pricing, inventory, checkout options and orders. Cart tokens and order proof are sensitive. Do not retry mutations/lookup; reuse the same idempotency key only for uncertain order placement. Parse exact contract shapes: guest orders contain `items[]`; line count is `items.length`.
 
